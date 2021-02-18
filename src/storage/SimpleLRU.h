@@ -17,7 +17,7 @@ namespace Backend {
  */
 class SimpleLRU : public Afina::Storage {
 public:
-    SimpleLRU(size_t max_size = 1024) : _max_size(max_size){
+    SimpleLRU(size_t max_size = 1024) : _max_size(max_size) {
         _lru_head = std::unique_ptr<lru_node>(new lru_node);
         _lru_head->prev = std::unique_ptr<lru_node>(new lru_node);
         _lru_tail = _lru_head->prev.get();
@@ -68,9 +68,16 @@ private:
     lru_node *_lru_tail{};
 
     // Index of nodes from list above, allows fast random access to elements by lru_node#key
-    using node_map = std::map<std::reference_wrapper<const std::string>, std::reference_wrapper<lru_node>, std::less<std::string>>;
+    using node_map = std::map<std::reference_wrapper<const std::string>, 
+                                std::reference_wrapper<lru_node>, std::less<std::string>>;
     node_map _lru_index;
-    void add_head_node(const std::string &key, const std::string &value);
+
+    bool add_node(const std::string &key, const std::string &value);
+    void delete_iter(const node_map::iterator &node_iterator);
+    void get_iter(const node_map::iterator &node_iterator, std::string &value);
+    void set_iter(const node_map::iterator &node_iterator, const std::string &value);
+    bool contains(const std::string &key, node_map::iterator &node_iterator);
+    bool contains(const std::string &key);
     void push_node(const node_map::iterator &node_iterator); 
 };
 
