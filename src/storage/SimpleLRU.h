@@ -48,13 +48,27 @@ public:
     bool Get(const std::string &key, std::string &value) override;
 
 private:
-    // LRU cache node
+    
     using lru_node = struct lru_node {
-        std::string key;
+        const std::string key;
         std::string value;
         lru_node *next{};
         std::unique_ptr<lru_node> prev;
+
+        lru_node(){};
+        lru_node(const std::string &key, const std::string &value, lru_node *next) 
+            : key(key), value(value), next(next) {}
     };
+
+    using node_map = std::map<std::reference_wrapper<const std::string>, 
+                                std::reference_wrapper<lru_node>, std::less<std::string>>;
+
+    bool add_node(const std::string &key, const std::string &value); 
+    
+    void push_node(const node_map::iterator &node_iterator);
+
+private:
+    // LRU cache node
 
     // Maximum number of bytes could be stored in this cache.
     // i.e all (keys+values) must be not greater than the _max_size
@@ -67,18 +81,8 @@ private:
     std::unique_ptr<lru_node> _lru_head;
     lru_node *_lru_tail{};
 
-    // Index of nodes from list above, allows fast random access to elements by lru_node#key
-    using node_map = std::map<std::reference_wrapper<const std::string>, 
-                                std::reference_wrapper<lru_node>, std::less<std::string>>;
+    // Index of nodes from list above, allows fast random access to elements by lru_node#key 
     node_map _lru_index;
-
-    bool add_node(const std::string &key, const std::string &value);
-    void delete_iter(const node_map::iterator &node_iterator);
-    void get_iter(const node_map::iterator &node_iterator, std::string &value);
-    void set_iter(const node_map::iterator &node_iterator, const std::string &value);
-    bool contains(const std::string &key, node_map::iterator &node_iterator);
-    bool contains(const std::string &key);
-    void push_node(const node_map::iterator &node_iterator); 
 };
 
 } // namespace Backend
