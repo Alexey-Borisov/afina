@@ -19,9 +19,13 @@ bool SimpleLRU::PutIfAbsent(const std::string &key, const std::string &value) {
 bool SimpleLRU::Set(const std::string &key, const std::string &value) {
     node_map::iterator node_iter = _lru_index.find(key);
     if (node_iter == _lru_index.end()) { return false; }
-    std::string &node_value = node_iter->second.get().value;
-    _cur_size = _cur_size - node_value.size() + value.size();
-    node_value = value;
+    lru_node &node = node_iter->second.get();
+    if (node.key.size() + value.size() > _max_size) { return false; }
+    while (_cur_size - node.value.size() + value.size() > _max_size) {
+        Delete(_lru_tail->next->key);
+    }
+    _cur_size = _cur_size - node.value.size() + value.size();
+    node.value = value;
     push_node(node_iter);
     return true;
 }
@@ -54,7 +58,7 @@ bool SimpleLRU::add_node(const std::string &key, const std::string &value) {
     while (_cur_size + node_size > _max_size) {
         Delete(_lru_tail->next->key);
     }
-    std::unique_ptr<lru_node> new_node = std::unique_ptr<lru_node>(new lru_node{key, value, _lru_head.get()});
+    auto new_node = std::unique_ptr<lru_node>(new lru_node{key, value, _lru_head.get()});
     new_node->prev = std::move(_lru_head->prev);
     new_node->prev->next = new_node.get();
     _lru_head->prev = std::move(new_node);
