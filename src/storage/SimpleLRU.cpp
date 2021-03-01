@@ -5,8 +5,12 @@ namespace Backend {
 
 // See MapBasedGlobalLockImpl.h
 bool SimpleLRU::Put(const std::string &key, const std::string &value) { 
-    if (Set(key, value)) { return true; }
-    return add_node(key, value);
+    node_map::iterator node_iter = _lru_index.find(key);
+    if (node_iter != _lru_index.end()) {
+        return Set(key, value);
+    } else { 
+        return add_node(key, value);
+    }
 }
 
 // See MapBasedGlobalLockImpl.h
