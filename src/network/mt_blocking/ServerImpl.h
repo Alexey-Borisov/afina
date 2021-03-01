@@ -3,6 +3,9 @@
 
 #include <atomic>
 #include <thread>
+#include <set>
+#include <mutex>
+#include <condition_variable>
 
 #include <afina/network/Server.h>
 
@@ -37,7 +40,8 @@ protected:
      * Method is running in the connection acceptor thread
      */
     void OnRun();
-
+private:
+    void Worker(int client_socket);
 private:
     // Logger instance
     std::shared_ptr<spdlog::logger> _logger;
@@ -52,6 +56,14 @@ private:
 
     // Thread to run network on
     std::thread _thread;
+
+    size_t max_clients;
+
+    std::mutex mut_;
+
+    std::set<int> client_sockets;
+
+    std::condition_variable cv_;
 };
 
 } // namespace MTblocking
