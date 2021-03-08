@@ -63,9 +63,11 @@ private:
     using node_map = std::map<std::reference_wrapper<const std::string>, 
                                 std::reference_wrapper<lru_node>, std::less<std::string>>;
 
-    bool add_node(const std::string &key, const std::string &value); 
+    bool add_node(const std::string &key, const std::string &value);
+
+    bool set_iter(const node_map::iterator &node_iter, const std::string &value);
     
-    void push_node(const node_map::iterator &node_iterator);
+    void push_node(const node_map::iterator &node_iter);
 
 private:
     // LRU cache node

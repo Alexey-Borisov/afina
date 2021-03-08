@@ -7,7 +7,7 @@ namespace Backend {
 bool SimpleLRU::Put(const std::string &key, const std::string &value) { 
     node_map::iterator node_iter = _lru_index.find(key);
     if (node_iter != _lru_index.end()) {
-        return Set(key, value);
+        return set_iter(node_iter, value);
     } else { 
         return add_node(key, value);
     }
@@ -22,16 +22,7 @@ bool SimpleLRU::PutIfAbsent(const std::string &key, const std::string &value) {
 // See MapBasedGlobalLockImpl.h
 bool SimpleLRU::Set(const std::string &key, const std::string &value) {
     node_map::iterator node_iter = _lru_index.find(key);
-    if (node_iter == _lru_index.end()) { return false; }
-    lru_node &node = node_iter->second.get();
-    if (node.key.size() + value.size() > _max_size) { return false; }
-    while (_cur_size - node.value.size() + value.size() > _max_size) {
-        Delete(_lru_tail->next->key);
-    }
-    _cur_size = _cur_size - node.value.size() + value.size();
-    node.value = value;
-    push_node(node_iter);
-    return true;
+    return set_iter(node_iter, value);    
 }
 
 // See MapBasedGlobalLockImpl.h
@@ -72,6 +63,18 @@ bool SimpleLRU::add_node(const std::string &key, const std::string &value) {
     return true;
 }
 
+bool SimpleLRU::set_iter(const node_map::iterator &node_iter, const std::string &value) {
+    if (node_iter == _lru_index.end()) { return false; }
+    push_node(node_iter);
+    lru_node &node = node_iter->second.get();
+    if (node.key.size() + value.size() > _max_size) { return false; }
+    while (_cur_size - node.value.size() + value.size() > _max_size) {
+        Delete(_lru_tail->next->key);
+    }
+    _cur_size = _cur_size - node.value.size() + value.size();
+    node.value = value;
+    return true;
+}
 
 void SimpleLRU::push_node(const node_map::iterator &node_iterator) {
     lru_node &node = node_iterator->second.get();   
